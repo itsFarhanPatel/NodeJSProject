@@ -1,49 +1,64 @@
 pipeline {
     agent any
 
+    environment {
+        registry = "docker.io"
+        dockerImage = "itsfarhanpatel/myappnew"
+    }
+
     stages {
-        stage('Git Checkout') {
+        stage('Checkout') {
             steps {
-               git branch: 'master', credentialsId: 'git-credentials', url: 'https://github.com/itsFarhanPatel/NodeJSProject.git'
-            }
-        }   
-         stage('Build & Tag Docker Image') {
-            steps {
-               script {
-                   withDockerRegistry(credentialsId: 'my-dockerhub-credentials', toolName: 'docker') {
-                            sh "docker build -t itsfarhanpatel/myappnew:latest ."
-                    }
-               }
+                git 'https://github.com/itsFarhanPatel/NodeJSProject.git'
             }
         }
-        stage('Push Docker Image') {
-            steps {
-               script {
-                   withDockerRegistry(credentialsId: 'my-dockerhub-credentials', toolName: 'docker') {
-                            sh "docker push itsfarhanpatel/myappnew:latest"
-                    }
-               }
-            }
-        }
-        stage('Deploy to EC2') {
+
+        stage('Build Docker image') {
             steps {
                 script {
-                    // Login to Docker Hub using --password-stdin
-                    withCredentials([usernamePassword(credentialsId: 'my-dockerhub-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                        sh "echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin"
-                    }
+                    dockerImage = docker.build("${registry}/${dockerImage}")
+                }
+            }
+        }
 
-                    // Push the Docker image to Docker Hub
+        stage('Push Docker image') {
+            steps {
+                script {
                     docker.withRegistry('', 'my-dockerhub-credentials') {
                         dockerImage.push('latest')
                     }
+                }
+            }
+        }
 
-                    // Deploy to EC2 instance
+        stage('Deploy to EC2') {
+            steps {
+                script {
                     sshagent(['ec2-ssh-credentials']) {
-                        sh 'ssh -o StrictHostKeyChecking=no ubuntu@54.193.91.162 docker run -d -p 3000:3000 itsfarhanpatel/myappnew:latest'
+                        // Pull the latest image and run it on the EC2 instance
+                        sh '''
+                        ssh -o StrictHostKeyChecking=no ubuntu@54.193.91.162 << EOF
+                        docker pull ${registry}/${dockerImage}:latest
+                        docker stop myapp || true
+                        docker rm myapp || true
+                        docker run -d --name myapp -p 3000:3000 ${registry}/${dockerImage}:latest
+                        EOF
+                        '''
                     }
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo 'Deployment successful!'
+        }
+        failure {
+            echo 'Deployment failed.'
         }
     }
 }
