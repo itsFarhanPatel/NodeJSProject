@@ -17,7 +17,7 @@ pipeline {
         stage('Deploy Docker Container') {
             steps {
                 script {
-                    docker.withRegistry('', 'docker-credentials') {
+                    docker.withRegistry('', 'my-dockerhub-credentials') {
                         dockerImage.push('latest')
                     }
                     sh 'docker run -d -p 3000:3000 simple-node-app'
