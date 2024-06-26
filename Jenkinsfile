@@ -16,6 +16,14 @@ pipeline {
                }
             }
         }
+        stage('Push Docker Image') {
+            steps {
+               script {
+                   withDockerRegistry(credentialsId: 'my-dockerhub-credentials', toolName: 'docker') {
+                            sh "docker push itsfarhanpatel/myapp:latest"
+                    }
+               }
+            }
         stage('Deploy to EC2') {
             steps {
                 script {
