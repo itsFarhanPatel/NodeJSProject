@@ -2,15 +2,10 @@ pipeline {
     agent any
 
     stages {
-        stage('Clone repository') {
-            steps {
-     git 'https://github.com/itsFarhanPatel/NodeJSProject.git' 
-            }
-        }
         stage('Build Docker image') {
             steps {
                 script {
-                    dockerImage = sudo docker.build("myapp")
+                    dockerImage = docker.build("myapp")
                 }
             }
         }
