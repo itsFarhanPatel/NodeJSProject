@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         EC2_IP = '54.193.91.162'
-        SSH_CREDENTIALS_ID = 'ec2-ssh-credentials-id'
+        SSH_CREDENTIALS_ID = 'ec2-ssh-credentials'
         registry = "docker.io"
         dockerImage = "itsfarhanpatel/new-myapp"
     }
@@ -35,7 +35,7 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 script {
-                    sshagent(credentials: [SSH_CREDENTIALS_ID]) {
+                    sshagent(credentials: [EC2_SSH_CREDENTIALS]) {
                         sh """
                         ssh -o StrictHostKeyChecking=no ubuntu@${EC2_IP} 'bash -s' < deploy-script.sh
                         """
