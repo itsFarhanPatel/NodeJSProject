@@ -3,8 +3,6 @@ pipeline {
     environment {
         EC2_IP = '54.193.91.162'
         SSH_CREDENTIALS_ID = 'ec2-ssh-credentials-id'
-
-    environment {
         registry = "docker.io"
         dockerImage = "itsfarhanpatel/new-myapp"
     }
