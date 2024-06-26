@@ -2,17 +2,19 @@ pipeline {
     agent any
 
     stages {
-        stage('Build Docker image') {
+         stage('Build & Tag Docker Image') {
             steps {
-                script {
-                    dockerImage = docker.build("myapp")
-                }
+               script {
+                   withDockerRegistry(credentialsId: 'my-dockerhub-credentials', toolName: 'docker') {
+                            sh "docker build -t itsfarhan/myapp:latest ."
+                    }
+               }
             }
         }
         stage('Deploy to EC2') {
             steps {
                 script {
-                    docker.withRegistry('', 'my-dockerhub-credentials') {
+                        docker.withRegistry('', 'my-dockerhub-credentials') {
                         dockerImage.push('latest')
                     }
                     sshagent(['ec2-ssh-credentials']) {
