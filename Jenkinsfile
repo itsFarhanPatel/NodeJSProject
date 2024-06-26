@@ -1,56 +1,28 @@
 pipeline {
     agent any
-    environment {
-        EC2_IP = '54.193.91.162'
-        SSH_CREDENTIALS_ID = 'ec2-ssh-credentials'
-        registry = "docker.io"
-        dockerImage = "itsfarhanpatel/new-myapp"
-    }
 
     stages {
-        stage('Checkout') {
+        stage('Clone Repository') {
             steps {
-                git 'https://github.com/itsFarhanPatel/NodeJSProject.git'
+                git ' https://github.com/itsFarhanPatel/NodeJSProject.git'
             }
         }
-
-        stage('Build Docker image') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("${registry}/${dockerImage}")
+                    dockerImage = docker.build("simple-node-app")
                 }
             }
         }
-
-        stage('Push Docker image') {
+        stage('Deploy Docker Container') {
             steps {
                 script {
-                    docker.withRegistry('', 'my-dockerhub-credentials') {
+                    docker.withRegistry('', 'docker-credentials') {
                         dockerImage.push('latest')
                     }
+                    sh 'docker run -d -p 3000:3000 simple-node-app'
                 }
             }
-        }
-
-        stage('Deploy to EC2') {
-            steps {
-                script {
-                    sshagent(credentials: [EC2_SSH_CREDENTIALS]) {
-                        sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@${EC2_IP} 'bash -s' < deploy-script.sh
-                        """
-                    }
-                }
-            }
-        }
-    }
-    post {
-        always {
-            cleanWs()
-        }
-        failure {
-            echo 'Deployment failed.'
         }
     }
 }
-
