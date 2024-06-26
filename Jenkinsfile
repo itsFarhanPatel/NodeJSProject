@@ -11,7 +11,7 @@ pipeline {
             steps {
                script {
                    withDockerRegistry(credentialsId: 'my-dockerhub-credentials', toolName: 'docker') {
-                            sh "docker build -t itsfarhan/myapp:latest ."
+                            sh "docker build -t itsfarhanpatel/myapp:latest ."
                     }
                }
             }
