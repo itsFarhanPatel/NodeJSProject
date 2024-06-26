@@ -6,6 +6,7 @@ pipeline {
             steps {
                git branch: 'master', credentialsId: 'git-credentials', url: 'https://github.com/itsFarhanPatel/NodeJSProject.git'
             }
+        }   
          stage('Build & Tag Docker Image') {
             steps {
                script {
