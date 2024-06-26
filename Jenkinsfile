@@ -1,9 +1,12 @@
 pipeline {
     agent any
+    environment {
+        EC2_IP = '54.193.91.162'
+        SSH_CREDENTIALS_ID = 'ec2-ssh-credentials-id'
 
     environment {
         registry = "docker.io"
-        dockerImage = "itsfarhanpatel/myappnew"
+        dockerImage = "itsfarhanpatel/new-myapp"
     }
 
     stages {
@@ -34,31 +37,22 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 script {
-                    sshagent(['ec2-ssh-credentials']) {
-                        // Pull the latest image and run it on the EC2 instance
-                        sh '''
-                        ssh -o StrictHostKeyChecking=no ubuntu@54.193.91.162 << EOF
-                        docker pull ${registry}/${dockerImage}:latest
-                        docker stop myapp || true
-                        docker rm myapp || true
-                        docker run -d --name myapp -p 3000:3000 ${registry}/${dockerImage}:latest
-                        EOF
-                        '''
+                    sshagent(credentials: [SSH_CREDENTIALS_ID]) {
+                        sh """
+                        ssh -o StrictHostKeyChecking=no ubuntu@${EC2_IP} 'bash -s' < deploy-script.sh
+                        """
                     }
                 }
             }
         }
     }
-
     post {
         always {
             cleanWs()
-        }
-        success {
-            echo 'Deployment successful!'
         }
         failure {
             echo 'Deployment failed.'
         }
     }
+}
 }
