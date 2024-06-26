@@ -16,7 +16,7 @@ pipeline {
                         dockerImage.push('latest')
                     }
                     sshagent(['ec2-ssh-credentials']) {
-                        sh 'ssh -o StrictHostKeyChecking=no ec2-user@<EC2-IP> docker run -d -p 3000:3000 myapp'
+                        sh 'ssh -o StrictHostKeyChecking=no ubuntu@54.193.91.162 docker run -d -p 3000:3000 myapp'
                     }
                 }
             }
