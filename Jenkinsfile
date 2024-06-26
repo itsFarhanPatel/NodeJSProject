@@ -28,9 +28,17 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 script {
-                        docker.withRegistry('', 'my-dockerhub-credentials') {
+                    // Login to Docker Hub using --password-stdin
+                    withCredentials([usernamePassword(credentialsId: 'my-dockerhub-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                        sh "echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin"
+                    }
+
+                    // Push the Docker image to Docker Hub
+                    docker.withRegistry('', 'my-dockerhub-credentials') {
                         dockerImage.push('latest')
                     }
+
+                    // Deploy to EC2 instance
                     sshagent(['ec2-ssh-credentials']) {
                         sh 'ssh -o StrictHostKeyChecking=no ubuntu@54.193.91.162 docker run -d -p 3000:3000 itsfarhanpatel/myappnew:latest'
                     }
